@@ -237,6 +237,7 @@ echo "${CRYPT_NAME} UUID=$(blkid -s UUID -o value ${RAID_DISK_ROOT}) none luks,d
 
 # grub, noclear
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
+sed -i 's/quiet//g' /etc/default/grub
 mkdir -p /etc/systemd/system/getty@tty1.service.d/
 cd /etc/systemd/system/getty@tty1.service.d/
 cat <<EOF2 >noclear.conf
