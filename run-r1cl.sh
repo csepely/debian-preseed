@@ -31,7 +31,9 @@ ROOT_PASSWORD="$LUKS_PASSWORD"
 
 LVM_NAME="/dev/mapper/$CRYPT_NAME"
 
-HOSTNAME_BARE="debian-b$(date +%Y-%j-%H)"
+DEFAULT_HOSTNAME="debian-b$(date +%Y-%j-%H)"
+ARG1="$1"
+HOSTNAME_BARE="${ARG1:=$DEFAULT_HOSTNAME}"
 
 echo "[anna-install] Loading components..."
 
