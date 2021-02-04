@@ -29,18 +29,21 @@ CRYPT_NAME="${RAID_NAME_ROOT}_crypt"
 LUKS_PASSWORD="r00tme"
 ROOT_PASSWORD="$LUKS_PASSWORD"
 
+ADDITIONAL_USER=ladmin
+ADDITIONAL_PASSWORD=insecure
+
 LVM_NAME="/dev/mapper/$CRYPT_NAME"
 
 DEFAULT_HOSTNAME="debian-b$(date +%Y-%j-%H)"
 ARG1="$3"
 HOSTNAME_BARE="${ARG1:=$DEFAULT_HOSTNAME}"
 
-echo "[info] Disks: ${DISKS}, Hostname: ${HOSTNAME_BARE}\nIs it correct? (y|n)"
+echo -e "[info] Disks: ${DISKS}, Hostname: ${HOSTNAME_BARE}\nIs it correct? (y|n)"
 read answer
 if [[ "$answer" != "y" ]]
 then
     echo "Usage: bash $0 [disk#1] [disk#2] [hostname]"
-    exit -1
+    exit 255
 fi
 
 echo "[anna-install] Loading components..."
@@ -206,9 +209,15 @@ DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -f noninteractive tzdata
 cat <<EOF2 >> /etc/network/interfaces
 auto lo
 iface lo inet loopback
-allow-hotplug ens18
-iface ens18 inet dhcp
 EOF2
+
+while read net_in
+do
+    if [[ "\$net_in" != "lo" ]]
+    then
+        echo -e "allow-hotplug \${net_in}\niface \${net_in} inet dhcp" >> /etc/network/interfaces
+    fi
+done < <(ls /sys/class/net/)
 
 echo "Using ${HOSTNAME_BARE} as hostname..."
 echo "${HOSTNAME_BARE}" > /etc/hostname
@@ -240,7 +249,7 @@ EOF2
 rm -f /etc/default/locale /etc/locale.gen /etc/default/keyboard
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y locales console-setup
-apt-get install -y linux-image-amd64 grub-efi-amd64 lvm2 mdadm cryptsetup
+apt-get install -y linux-image-amd64 grub-efi-amd64 lvm2 mdadm cryptsetup openssh-server
 
 # crypto
 echo "${CRYPT_NAME} UUID=$(blkid -s UUID -o value ${RAID_DISK_ROOT}) none luks,discard" >> /etc/crypttab
@@ -259,6 +268,8 @@ grub-install --target=x86_64-efi
 update-grub
 update-initramfs -u
 echo "root:${ROOT_PASSWORD}" | chpasswd
+useradd -m -s /bin/bash ${ADDITIONAL_USER}
+echo "ladmin:${ADDITIONAL_PASSWORD}" | chpasswd
 EOF
 
 echo "[chroot] Executing additional steps inside chroot..."
