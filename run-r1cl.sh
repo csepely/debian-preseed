@@ -131,7 +131,6 @@ echo "[cryptsetup] Creating crypted partition..."
 echo -n "$LUKS_PASSWORD" | cryptsetup \
 --key-file=- \
 luksFormat \
---type luks1 \
 ${RAID_DISK_ROOT}
 echo -n "$LUKS_PASSWORD" | cryptsetup \
 --key-file=- \
