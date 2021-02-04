@@ -10,8 +10,8 @@
 
 set -e
 
-DISK1=/dev/vda
-DISK2=/dev/vdb
+DISK1=${1:-/dev/sda}
+DISK2=${2:-/dev/sdb}
 
 DISKS="$DISK1 $DISK2"
 
@@ -32,8 +32,16 @@ ROOT_PASSWORD="$LUKS_PASSWORD"
 LVM_NAME="/dev/mapper/$CRYPT_NAME"
 
 DEFAULT_HOSTNAME="debian-b$(date +%Y-%j-%H)"
-ARG1="$1"
+ARG1="$3"
 HOSTNAME_BARE="${ARG1:=$DEFAULT_HOSTNAME}"
+
+echo "[info] Disks: ${DISKS}, Hostname: ${HOSTNAME_BARE}\nIs it correct? (y|n)"
+read answer
+if [[ "$answer" != "y" ]]
+then
+    echo "Usage: bash $0 [disk#1] [disk#2] [hostname]"
+    exit -1
+fi
 
 echo "[anna-install] Loading components..."
 
