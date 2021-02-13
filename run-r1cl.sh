@@ -141,8 +141,13 @@ sleep 3
 echo "[LVM] Creating LVM..."
 pvcreate  -ff -y $LVM_NAME
 vgcreate system $LVM_NAME
-lvcreate -y -L 2GB system -n swap
-lvcreate -y -l +100%FREE system -n root
+# TODO: swap size!!!
+mem=$(free -g|grep Mem)
+set -- ${mem}
+mem_size=$(($2 / 1000 / 1000 + 1))
+lvcreate -y -L ${mem_size}GB system -n swap
+# TODO: root size!!!
+lvcreate -y -l +80%FREE system -n root
 
 # filesystem
 echo "[mkfs] Filesystems..."
